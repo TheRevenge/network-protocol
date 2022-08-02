@@ -14,6 +14,7 @@ const DhCompleteHandshakeEvent = require('./Messages/Incoming/Handshake/DhComple
 const OkEvent = require('./Messages/Incoming/Handshake/OkEvent');
 const PingEvent = require('./Messages/Incoming/Misc/PingEvent');
 const RoomReadyEvent = require('./Messages/Incoming/Room/RoomReadyEvent');
+const MessengerNewConsoleMessageEvent = require("./Messages/Incoming/Messenger/MessengerNewConsoleMessageEvent");
 
 class PacketHandler {
   constructor(network) {
@@ -27,6 +28,7 @@ class PacketHandler {
     this.registerPacket(Incoming.Ping, PingEvent);
     this.registerPacket(Incoming.Ok, OkEvent);
     this.registerPacket(Incoming.RoomReady, RoomReadyEvent);
+    this.registerPacket(Incoming.MessengerNewConsoleMessage, MessengerNewConsoleMessageEvent);
   }
 
   registerPacket(header, handler) {
