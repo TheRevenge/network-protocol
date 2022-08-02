@@ -4,6 +4,7 @@
   "description": "Habbo Unity network protocol for browsers",
   "main": "dist/bundle.js",
   "scripts": {
+    "start": "node bot.js fr",
     "build": "browserify src/Client.js --standalone Client -o dist/bundle.js",
     "watch": "watchify src/Client.js --standalone Client -d -o dist/bundle.js"
   },
