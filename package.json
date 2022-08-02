@@ -23,5 +23,9 @@
     "buffer-reverse": "^1.0.1",
     "node-forge": "github:HabboEnhanced/forge",
     "watchify": "^3.11.1"
+  },
+  "dependencies": {
+    "jsdom": "^20.0.0",
+    "ws": "^8.8.1"
   }
 }

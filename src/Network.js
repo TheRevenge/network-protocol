@@ -9,6 +9,7 @@ const Session = require('./Session');
 const Util = require('./Util/Util');
 const RSAKey = require('./Crypto/RSAKey');
 const RSA = require('./Crypto/RSA');
+const WebSocket = require('ws');
 
 class Network {
   constructor(client, websocketEndpoint, ssoTicket) {
@@ -108,16 +109,15 @@ class Network {
   }
 
   async loadHeaders() {
-    let headers = (await axios.get('https://jxz.be/habbo-webgl-clients/headers.json')).data;
-
-    headers.incoming.forEach(header => {
-      Incoming.indexed[header.header] = header.name;
-      Incoming[header.name] = header.header;
+    let headers = (await axios.get('https://raw.githubusercontent.com/sirjonasxx/G-Earth/master/G-Earth/src/main/resources/build/common/messages.json')).data;
+    headers.Incoming.forEach(header => {
+      Incoming.indexed[header.Id] = header.Name;
+      Incoming[header.Name] = header.Id;
     });
 
-    headers.outgoing.forEach(header => {
-      Outgoing.indexed[header.header] = header.name;
-      Outgoing[header.name] = header.header;
+    headers.Outgoing.forEach(header => {
+      Outgoing.indexed[header.Id] = header.Name;
+      Outgoing[header.Name] = header.Id;
     });
   }
 }

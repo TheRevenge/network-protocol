@@ -4,10 +4,12 @@
 	<script type="text/javascript" src="dist/bundle.js"></script>
 	<script type="text/javascript">
 		(async () => {
-			let client = new Client('fr', prompt('SSO :'));
-      window.client = client;
+			let client = new Client('fr', prompt('SSO :').replace("hhfr.", ""));
+      		window.client = client;
+
 			await client.connect();
-      //client.loadRoom(46198653, '');
+			
+      		client.loadRoom(43083608, 'lol');
 		})();
 	</script>
 	<title>Client test</title>
