@@ -4,17 +4,25 @@ const ServerMessage = require('./Messages/ServerMessage');
 const Incoming = require('./Messages/Incoming/Incoming').getInstance();
 const Outgoing = require('./Messages/Outgoing/Outgoing').getInstance();
 
+const ChatComposer = require('./Messages/Outgoing/Room/ChatComposer');
 const HelloComposer = require('./Messages/Outgoing/Handshake/HelloComposer');
 const InitDhHandshakeComposer = require('./Messages/Outgoing/Handshake/InitDhHandshakeComposer');
 const GetGuestRoomComposer = require('./Messages/Outgoing/Room/GetGuestRoomComposer');
 const FlatOpcComposer = require('./Messages/Outgoing/Room/FlatOpcComposer');
+const FollowFriendComposer = require("./Messages/Outgoing/FriendList/FollowFriendComposer");
+const QuitComposer = require('./Messages/Outgoing/Room/QuitComposer');
+const SendMessageComposer = require("./Messages/Outgoing/FriendList/SendMessageComposer");
+const ShoutComposer = require('./Messages/Outgoing/Room/ShoutComposer');
+const UserStartTypingComposer = require('./Messages/Outgoing/Room/UserStartTypingComposer');
+const UserCancelTypingComposer = require('./Messages/Outgoing/Room/UserCancelTypingComposer');
 
 const DhInitHandshakeEvent = require('./Messages/Incoming/Handshake/DhInitHandshakeEvent');
 const DhCompleteHandshakeEvent = require('./Messages/Incoming/Handshake/DhCompleteHandshakeEvent');
+const MessengerNewConsoleMessageEvent = require("./Messages/Incoming/FriendList/MessengerNewConsoleMessageEvent");
 const OkEvent = require('./Messages/Incoming/Handshake/OkEvent');
 const PingEvent = require('./Messages/Incoming/Misc/PingEvent');
 const RoomReadyEvent = require('./Messages/Incoming/Room/RoomReadyEvent');
-const MessengerNewConsoleMessageEvent = require("./Messages/Incoming/Messenger/MessengerNewConsoleMessageEvent");
+
 
 class PacketHandler {
   constructor(network) {
@@ -99,6 +107,34 @@ class PacketHandler {
     let flatOpc = new FlatOpcComposer(roomId, password ? password : '');
 
     this.sendMessages([getGuestRoom, flatOpc]);
+  }
+
+  sendPrivateMessage(recieverId, message) {
+    this.sendMessage(new SendMessageComposer(recieverId, message));
+  }
+
+  followFriend(targetId) {
+    this.sendMessage(new FollowFriendComposer(targetId));
+  }
+
+  leaveRoom() {
+    this.sendMessage(new QuitComposer());
+  }
+
+  sendChat(message, styleId, chatTrackingId) {
+    this.sendMessage(new UserStartTypingComposer());
+    setTimeout(() => {
+      this.sendMessage(new UserCancelTypingComposer());
+      this.sendMessage(new ChatComposer(message, styleId, chatTrackingId));
+    }, 2000);
+  }
+
+  sendShout(message, styleId) {
+    this.sendMessage(new UserStartTypingComposer());
+    setTimeout(() => {
+      this.sendMessage(new UserCancelTypingComposer());
+      this.sendMessage(new ShoutComposer(message, styleId));
+    }, 2000);
   }
 
   instantiate() {

@@ -1,7 +1,7 @@
 const MessageComposer = require('../MessageComposer');
 const Outgoing = require('../Outgoing').getInstance();
 
-class MessengerNewConsoleComposer extends MessageComposer {
+class SendMessageComposer extends MessageComposer {
   constructor(chatId, message) {
     super();
     this.chatId = chatId;
@@ -15,4 +15,4 @@ class MessengerNewConsoleComposer extends MessageComposer {
   }
 }
 
-module.exports = MessengerNewConsoleComposer;
+module.exports = SendMessageComposer;
