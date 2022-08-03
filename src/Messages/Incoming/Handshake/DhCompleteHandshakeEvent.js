@@ -24,7 +24,7 @@ class DhCompleteHandshakeEvent extends MessageHandler {
     console.log('CRYPTO DONE');
 
     let getIdentityAgreementTypes = new GetIdentityAgreementTypesComposer();
-    let versionCheck = new VersionCheckComposer('0.12.2');
+    let versionCheck = new VersionCheckComposer('0.26.0');
     let uniqueMachineId = new UniqueMachineIdComposer(Util.randomHexString(76), 'Chrome 84');
     let loginWithTicket = new LoginWithTicketComposer(this.session.ssoTicket);
 
