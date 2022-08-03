@@ -140,7 +140,7 @@ class PacketHandler {
   instantiate() {
     this.registerPackets();
 
-    let hello = new HelloComposer('18C199405558FE3C4534DF9E', 'UNITY1');
+    let hello = new HelloComposer('18C199405558FE3C4534DF9E', 'UNITY3');
     let initDhHandshake = new InitDhHandshakeComposer();
 
     this.sendMessages([hello, initDhHandshake]);
