@@ -9,14 +9,14 @@ if (args.length < 1) {
 
 process.stdout.write("⏳ Loading required libs... ");
 const { JSDOM } = require("jsdom");
+const dom = new JSDOM(`<!DOCTYPE html><p>Bot test</p>`);
+window = dom.window;
+
 const Client = require("./src/Client.js");
 const readline = require('readline').createInterface({
     input: process.stdin,
     output: process.stdout
 });
-
-const dom = new JSDOM(`<!DOCTYPE html><p>Bot test</p>`);
-window = dom.window;
 
 console.log("✅");
 
