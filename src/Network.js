@@ -9,7 +9,10 @@ const Session = require('./Session');
 const Util = require('./Util/Util');
 const RSAKey = require('./Crypto/RSAKey');
 const RSA = require('./Crypto/RSA');
-const WebSocket = require('ws');
+
+if (process) {
+  WebSocket = require('ws');
+}
 
 class Network {
   constructor(client, websocketEndpoint, ssoTicket) {
