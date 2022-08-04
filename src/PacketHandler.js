@@ -21,6 +21,7 @@ const DhCompleteHandshakeEvent = require('./Messages/Incoming/Handshake/DhComple
 const MessengerNewConsoleMessageEvent = require("./Messages/Incoming/FriendList/MessengerNewConsoleMessageEvent");
 const OkEvent = require('./Messages/Incoming/Handshake/OkEvent');
 const PingEvent = require('./Messages/Incoming/Misc/PingEvent');
+const RoomForwardEvent = require('./Messages/Incoming/Room/RoomForwardEvent');
 const RoomReadyEvent = require('./Messages/Incoming/Room/RoomReadyEvent');
 
 
@@ -37,6 +38,7 @@ class PacketHandler {
     this.registerPacket(Incoming.Ok, OkEvent);
     this.registerPacket(Incoming.RoomReady, RoomReadyEvent);
     this.registerPacket(Incoming.MessengerNewConsoleMessage, MessengerNewConsoleMessageEvent);
+    this.registerPacket(Incoming.RoomForward, RoomForwardEvent);
   }
 
   registerPacket(header, handler) {
@@ -122,19 +124,11 @@ class PacketHandler {
   }
 
   sendChat(message, styleId, chatTrackingId) {
-    this.sendMessage(new UserStartTypingComposer());
-    setTimeout(() => {
-      this.sendMessage(new UserCancelTypingComposer());
-      this.sendMessage(new ChatComposer(message, styleId, chatTrackingId));
-    }, 2000);
+    this.sendMessage(new ChatComposer(message, styleId, chatTrackingId));
   }
 
   sendShout(message, styleId) {
-    this.sendMessage(new UserStartTypingComposer());
-    setTimeout(() => {
-      this.sendMessage(new UserCancelTypingComposer());
       this.sendMessage(new ShoutComposer(message, styleId));
-    }, 2000);
   }
 
   instantiate() {
