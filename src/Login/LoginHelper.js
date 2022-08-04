@@ -38,7 +38,7 @@ class LoginHelper {
             this.fingerprint = account.fingerprint;
         } else {
             console.log("[LOGIN] Account \"" + email + "\" not found in accounts.json");
-            this.cookies = "";
+            this.cookies = [];
             this.fingerprint = Util.randomHexString(32);
         }
 
@@ -80,12 +80,22 @@ class LoginHelper {
                         console.log("[LOGIN] Successfully logged in as " + this.email);
 
                         if (response.headers["set-cookie"]) {
-                            console.log("[LOGIN] Renewing cookies for " + this.email + "...");
-                            let cookiesRaw = response.headers["set-cookie"];
-                            this.cookies = "";
-                            cookiesRaw.forEach(cookieRaw => {
-                                this.cookies += cookieRaw.split(";")[0] + ";";
-                            });
+                            const cookiesRaw = response.headers["set-cookie"];
+                            
+                            const sessionIdIndex = cookiesRaw.findIndex(cookie => cookie.includes("session.id")) ;
+                            const browserTokenIndex = cookiesRaw.findIndex(cookie => cookie.includes("browser_token"));
+                            
+                            // Ugly but effective
+                            if (sessionIdIndex !== -1) {
+                                console.log("[LOGIN] Renewing session.id cookie for " + this.email + "...");
+                                const localCookieIndex = this.cookies.find(cookie => cookie.includes("session.id")) || this.cookies.length;
+                                this.cookies[localCookieIndex] = cookiesRaw[sessionIdIndex].split(";")[0];
+                            }
+                            if (browserTokenIndex !== -1) {
+                                console.log("[LOGIN] Renewing browser_token cookie for " + this.email+ "...");
+                                const localCookieIndex = this.cookies.find(cookie => cookie.includes("browser_token")) || this.cookies.length;
+                                this.cookies[localCookieIndex] = cookiesRaw[browserTokenIndex].split(";")[0];
+                            }
                         }
 
                         this.#currentAvatarName = body.name;
@@ -164,7 +174,7 @@ class LoginHelper {
             "Referer": "https://www.habbo.fr/",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
-            "Cookie": this.cookies,
+            "Cookie": this.cookies.join(";"),
             'Connection': 'keep-alive',
         }
     }
@@ -212,17 +222,30 @@ class LoginHelper {
     }
 
     getMultipleTicket(avatarList, callback) {
-        let loggingProgress = 0;
         let ticketList = [];
 
-        avatarList.forEach(avatar => {
-            this.getSimpleTicket(avatar, (ticket) => {
-                if (!ticket) return callback(false);
+        this.#login("", (success) => {
+            if (!success) return callback(false);
 
-                ticketList.push(ticket);
+            avatarList.forEach(avatarName => {
+                if (!success) return callback(false);
 
-                if (++loggingProgress === avatarList.length) {
-                    callback(ticketList);
+                if (this.#currentAvatarName !== avatarName) {
+                    this.#selectAvatar(avatarName, (success) => {
+                        if (!success) return callback(false);
+
+                        this.#fetchTicket((ticket) => {
+                            ticketList.push(ticket);
+                            if (ticketList.length === avatarList.length) callback(ticketList);
+                        });
+                        this.#saveAccount();
+                    });
+                } else {
+                    this.#fetchTicket((ticket) => {
+                        ticketList.push(ticket);
+                        if (ticketList.length === avatarList.length) callback(ticketList);
+                    });
+                    this.#saveAccount();
                 }
             });
         });
