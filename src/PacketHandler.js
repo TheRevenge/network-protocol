@@ -144,8 +144,9 @@ class PacketHandler {
     message.compose();
 
     let buffer = message.response.get();
+    let packetName = Outgoing.indexed[message.response.header];
 
-    console.log('[OUTGOING]', message.response.getMessageBody());
+    console.log('[OUTGOING]', `[${packetName}]`,message.response.getMessageBody());
 
     if (this.network.session.crypto.outgoingChaCha) {
       let headerBytes = reverse(buffer.slice(4, 6));
@@ -163,8 +164,9 @@ class PacketHandler {
       message.compose();
 
       let messageBuffer = message.response.get();
-
-      console.log('[OUTGOING]', message.response.getMessageBody());
+      let packetName = Outgoing.indexed[message.response.header];
+    
+      console.log('[OUTGOING]', `[${packetName}]`,message.response.getMessageBody());
 
       if (this.network.session.crypto.outgoingChaCha) {
         let headerBytes = reverse(messageBuffer.slice(4, 6));
