@@ -105,3 +105,6 @@ dist
 
 # MacOS DS_Store
 .DS_Store
+
+# Modules lock pck
+*-lock.json
