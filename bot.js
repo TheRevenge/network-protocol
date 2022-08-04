@@ -55,18 +55,17 @@ switch (args[1]) {
 
                 launchList.forEach(account => {
                     const login = new LoginHelper(args[0], account.email, account.password);
-                    login.getMultipleTicket(account.avatars, (ticketList) => {
-                        ticketList.forEach(async (ticket, index) => {
-                            if (!ticket) {
-                                console.log(`⚠️ Failed to get ticket for ${account.avatars[index]} \n That bot won't be launched.`);
-                            } else {
-                                console.log(`⏳ Starting the bot "${account.avatars[index]}"...`);
-                                let bot = new Client(args[0], ticket);
-                                await bot.connect();
-                                botList.push(bot);
-                                console.log(`✅ Bot ${account.avatars[index]} started`);
-                            }
-                        });
+                    login.getMultipleTicket(account.avatars, async (index, ticket, next) => {
+                        if (!ticket) {
+                            console.log(`⚠️ Failed to get ticket for ${account.avatars[index]} \n That bot won't be launched.`);
+                        } else {
+                            console.log(`⏳ Starting the bot "${account.avatars[index]}" with ticket ${ticket}...`);
+                            let bot = new Client(args[0], ticket.replace("hhfr.", ""));
+                            bot.connect();
+                            botList.push(bot);
+                            console.log(`✅ Bot ${account.avatars[index]} started`);
+                            setTimeout(next, 5000);
+                        }
                     });
                 });
             });

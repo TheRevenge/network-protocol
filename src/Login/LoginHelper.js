@@ -126,7 +126,8 @@ class LoginHelper {
             body = JSON.parse(body);
 
             if (body.error) {
-                console.log("[LOGIN] Error fetching ticket for \"" + this.#currentAvatarName + "\": " + body.message);
+                console.log("[LOGIN] Error fetching ticket for \"" + this.#currentAvatarName + "\": " + body.error.text);
+                console.log(JSON.stringify(body));
                 callback(false);
             } else {
                 console.log("[LOGIN] All done for " + this.#currentAvatarName);
@@ -142,6 +143,7 @@ class LoginHelper {
             headers: this.#generateHeaders()
         }
 
+        console.log(`[LOGIN] Switching avatar from ${this.#currentAvatarName} to ${username} for ${this.email}...`);
         request(options, (error, response, body) => {
             let avatars = JSON.parse(body);
             let avatar = avatars.find(avatar => avatar.name === username);
@@ -222,32 +224,35 @@ class LoginHelper {
     }
 
     getMultipleTicket(avatarList, callback) {
-        let ticketList = [];
+        let self = this;
 
         this.#login("", (success) => {
             if (!success) return callback(false);
 
-            avatarList.forEach(avatarName => {
-                if (!success) return callback(false);
+            let avatarIndex = 0;
+            function nextAvatar() {
+                if (avatarIndex >= avatarList.length) return;
+                const avatarName = avatarList[avatarIndex];
 
-                if (this.#currentAvatarName !== avatarName) {
-                    this.#selectAvatar(avatarName, (success) => {
+                if (self.#currentAvatarName !== avatarName) {
+                    self.#selectAvatar(avatarName, (success) => {
                         if (!success) return callback(false);
 
-                        this.#fetchTicket((ticket) => {
-                            ticketList.push(ticket);
-                            if (ticketList.length === avatarList.length) callback(ticketList);
+                        self.#fetchTicket((ticket) => {
+                            callback(avatarIndex, ticket, nextAvatar);
+                            avatarIndex++;
                         });
-                        this.#saveAccount();
+                        self.#saveAccount();
                     });
                 } else {
-                    this.#fetchTicket((ticket) => {
-                        ticketList.push(ticket);
-                        if (ticketList.length === avatarList.length) callback(ticketList);
+                    self.#fetchTicket((ticket) => {
+                        callback(avatarIndex, ticket, nextAvatar);
+                        avatarIndex++;
                     });
-                    this.#saveAccount();
+                    self.#saveAccount();
                 }
-            });
+            }
+            nextAvatar(0);
         });
     }
 }
