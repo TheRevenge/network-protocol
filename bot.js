@@ -2,8 +2,8 @@ console.log("  _  _      _    _         _   ", "\n", "| || |__ _| |__| |__  ___|
 
 const args = process.argv.splice(2);
 if (args.length < 1) {
-    console.log("Usage: node test.js <hotel> [<sso>]");
-    console.log("Example: node test.js fr hhfr.abcdefg-1234-abcd-1234-abcdefghijk-12345678.V4");
+    console.log("Usage: node bot.js <hotel> [<sso>]");
+    console.log("Example: node bot.js fr hhfr.abcdefg-1234-abcd-1234-abcdefghijk-12345678.V4");
     process.exit(1);
 }
 
