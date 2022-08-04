@@ -17,8 +17,7 @@ class MessengerNewConsoleMessageEvent extends MessageHandler {
                     setTimeout(() => {this.client.sendPrivateMessage(this.senderId, args.join(" "));}, 1000);
                 break;
                 case "say":
-                    //setTimeout(() => {this.client.sendChat(args.join(" "));}, 1000);
-                    this.client.sendChat("This is a test, only a test.")
+                    setTimeout(() => {this.client.sendChat(args.join(" "));}, 1000);
                 break;
                 case "shout":
                     setTimeout(() => {this.client.sendShout(args.join(" "));}, 1000);
