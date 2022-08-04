@@ -13,7 +13,7 @@ if (args.length <= 1) {
     console.log("  bot.username <username> The username of the avatar you want to use");
     console.log("  Example: node bot.js fr email youremail@gmail.com password yourpassword username yourusername");
     //console.log("\n == Multiple login method (could need captcha validation) ==");
-    //console.log("  bot.credsFile <path> Path to a file containing your account credentials");
+    //console.log("  bot.credsFile <file> File containing your account credentials");
     process.exit(1);
 }
 
@@ -52,14 +52,12 @@ switch (args[1]) {
             process.exit(1);
         }
 
-        console.log(args);
-
         const email = args[args.indexOf("bot.email") + 1];
         const password = args[args.indexOf("bot.password") + 1];
         const username = args[args.indexOf("bot.username") + 1];
 
-        const login = new LoginHelper(args[0]);
-        login.getSimpleTicket(email, password, username, (ticket) => {
+        const login = new LoginHelper(args[0], email, password);
+        login.getSimpleTicket(username, (ticket) => {
             if (!ticket) {
                 console.log("⚠️ Failed to get ticket");
                 process.exit(1);

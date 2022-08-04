@@ -1,4 +1,6 @@
 const request = require('request');
+const fs = require('fs');
+const path = require("path");
 
 const Util = require("../Util/Util");
 
@@ -9,37 +11,52 @@ const readline = require('readline').createInterface({
 
 
 class LoginHelper {
-    hotel = "";
+    email;
+    password;
+    hotel;
+    cookies;
+    fingerprint;
+    accountsList;
 
-    #currentName;
-    #cookies;
-    #fingerprint;
-
+    #currentAvatarName;
     #ticketURL;
     #loginURL;
     #fetchAvatarURL;
     #selectAvatarURL;
 
-    constructor(hotel) {
+    constructor(hotel, email, password) {
         this.hotel = hotel;
+        this.email = email
+        this.password = password;
+
+        // Retrieve account data from accounts.json
+        const accountsList = require(path.join(__dirname, "/../../accounts.json"));
+        const account = accountsList[email];
+        if (account) {
+            console.log("[LOGIN] Account \"" + email + "\" found in accounts.json");
+            this.cookies = account.cookies;
+            this.fingerprint = account.fingerprint;
+        } else {
+            console.log("[LOGIN] Account \"" + email + "\" not found in accounts.json");
+            this.cookies = "";
+            this.fingerprint = Util.randomHexString(32);
+        }
 
         this.#ticketURL = "https://www.habbo." + hotel + "/api/client/clientnative/url";
         this.#loginURL = "https://www.habbo." + hotel + "/api/public/authentication/login";
         this.#fetchAvatarURL = "https://www.habbo." + hotel + "/api/user/avatars";
         this.#selectAvatarURL = "https://www.habbo." + hotel + "/api/user/avatars/select";
-
-        this.#fingerprint = Util.randomHexString(32);
     }
 
-    #login(email, password, captchaToken, callback) {
+    #login(captchaToken, callback) {
         const options = {
             uri: this.#loginURL,
             method: "POST",
             headers: this.#generateHeaders(),
-            json: {email: email, password: password, captchaToken: captchaToken},
+            json: {email: this.email, password: this.password, captchaToken: captchaToken},
         }
 
-        console.log("[Login] Logging in as " + email + "...");
+        console.log("[Login] Logging in as " + this.email + "...");
         request(options, (error, response, body) => {
             if (!body) return callback(false);
             
@@ -49,27 +66,32 @@ class LoginHelper {
                     readline.question("[LOGIN] Captcha URL: ", (captchaUrl) => {
                         captchaToken = captchaUrl.split("?token=")[1];
                         console.log("[LOGIN] Retrying with captcha token...");
-                        this.#login(email, password, captchaToken, callback);
+                        this.#login(captchaToken, callback);
                     });
                     break;
             
                 case "login.invalid_password":
-                    console.log("[LOGIN] Incorrect email/password for " + email);
+                    console.log("[LOGIN] Incorrect email/password for " + this.email);
                     callback(false);
+                    break;
+
                 default:
                     if (body.name) {
-                        console.log("[LOGIN] Successfully logged in as " + email);
-                        let cookiesRaw = response.headers["set-cookie"];
-                        let cookies = "";
-                        cookiesRaw.forEach(cookieRaw => {
-                            cookies += cookieRaw.split(";")[0] + ";";
-                        });
+                        console.log("[LOGIN] Successfully logged in as " + this.email);
 
-                        this.#currentName = body.name;
-                        this.#cookies = cookies;
+                        if (response.headers["set-cookie"]) {
+                            console.log("[LOGIN] Renewing cookies for " + this.email + "...");
+                            let cookiesRaw = response.headers["set-cookie"];
+                            this.cookies = "";
+                            cookiesRaw.forEach(cookieRaw => {
+                                this.cookies += cookieRaw.split(";")[0] + ";";
+                            });
+                        }
+
+                        this.#currentAvatarName = body.name;
                         callback(true);
                     } else {
-                        console.log("[LOGIN] Invalid email/password for " + email);
+                        console.log("[LOGIN] Invalid email/password for " + this.email);
                         callback(false);
                     }
                     break;
@@ -84,20 +106,20 @@ class LoginHelper {
             headers: this.#generateHeaders()
         }
 
-        console.log("[LOGIN] Fetching ticket for " + this.#currentName + "...");
+        console.log("[LOGIN] Fetching ticket for \"" + this.#currentAvatarName + "\"...");
         request(options, (error, response, body) => {
             if (!body) {
-                console.log("[LOGIN] Uknown error fetching ticket");
+                console.log("[LOGIN] Uknown error fetching ticket for \"" + this.#currentAvatarName + "\"");
                 return callback(false);
             }
 
             body = JSON.parse(body);
 
             if (body.error) {
-                console.log("[LOGIN] Error fetching ticket: " + body.message);
+                console.log("[LOGIN] Error fetching ticket for \"" + this.#currentAvatarName + "\": " + body.message);
                 callback(false);
             } else {
-                console.log("[LOGIN] All done for " + this.#currentName);
+                console.log("[LOGIN] All done for " + this.#currentAvatarName);
                 callback(body.ticket);
             }
         });
@@ -122,7 +144,7 @@ class LoginHelper {
                 }
 
                 request(options, (error, response, body) => {
-                    this.#currentName = username;
+                    this.#currentAvatarName = username;
                     callback(true);
                 });
             } else {
@@ -137,34 +159,73 @@ class LoginHelper {
             "sec-fetch-dest": "empty",
             "sec-fetch-mode": "cors",
             "sec-fetch-site": "same-origin",
-            "x-habbo-fingerprint": this.#fingerprint,
+            "x-habbo-fingerprint": this.fingerprint,
             'access-control-allow-credentials': 'true',
             "Referer": "https://www.habbo.fr/",
             "Referrer-Policy": "strict-origin-when-cross-origin",
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/87.0.4280.141 Safari/537.36',
-            "Cookie": this.#cookies,
+            "Cookie": this.cookies,
             'Connection': 'keep-alive',
         }
     }
 
-    getSimpleTicket(email, password, avatarName, callback) {
-        this.#login(email, password, "", (success) => {
+    #saveAccount() {
+        let accountsList = require(path.join(__dirname, "/../../accounts.json"));
+        let account = accountsList[this.email] || {};
+        let avatars = account.avatars || [];
+
+        if (!avatars.includes(this.#currentAvatarName)) avatars.push(this.#currentAvatarName);
+        account = {
+            email: this.email,
+            password: this.password,
+            cookies: this.cookies,
+            fingerprint: this.fingerprint,
+            avatars: avatars
+        }
+        accountsList[this.email] = account;
+        
+        console.log("[LOGIN] Saving account data for " + this.email + "...");
+
+        try {
+            fs.writeFileSync(path.join(__dirname, "/../../accounts.json"), JSON.stringify(accountsList), "utf-8");
+        } catch (error) {
+            console.warn("[LOGIN] Warning: Couldn't save data for " + this.email + ": " + error);
+        }
+    }
+
+    getSimpleTicket(avatarName, callback) {
+        this.#login("", (success) => {
             if (!success) return callback(false);
 
-            if (this.#currentName !== avatarName) {
+            if (this.#currentAvatarName !== avatarName) {
                 this.#selectAvatar(avatarName, (success) => {
                     if (!success) return callback(false);
 
                     this.#fetchTicket(callback);
+                    this.#saveAccount();
                 });
             } else {
                 this.#fetchTicket(callback);
+                this.#saveAccount();
             }
         });
     }
 
-    getMultipleTicket() {
+    getMultipleTicket(avatarList, callback) {
+        let loggingProgress = 0;
+        let ticketList = [];
 
+        avatarList.forEach(avatar => {
+            this.getSimpleTicket(avatar, (ticket) => {
+                if (!ticket) return callback(false);
+
+                ticketList.push(ticket);
+
+                if (++loggingProgress === avatarList.length) {
+                    callback(ticketList);
+                }
+            });
+        });
     }
 }
 

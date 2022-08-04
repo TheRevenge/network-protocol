@@ -108,3 +108,6 @@ dist
 
 # Modules lock pck
 *-lock.json
+
+# Credentials file
+accounts.json
