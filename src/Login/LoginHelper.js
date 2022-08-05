@@ -56,9 +56,12 @@ class LoginHelper {
             json: {email: this.email, password: this.password, captchaToken: captchaToken},
         }
 
-        console.log("[Login] Logging in as " + this.email + "...");
+        console.log("[LOGIN] Logging in as " + this.email + "...");
         request(options, (error, response, body) => {
-            if (!body) return callback(false);
+            if (error) {
+                console.log("[LOGIN] Network error while logging in as " + this.email + ": " + error);
+                return callback(false);
+            }
             
             switch (body.message) {
                 case "invalid-captcha":
@@ -118,19 +121,31 @@ class LoginHelper {
 
         console.log("[LOGIN] Fetching ticket for \"" + this.#currentAvatarName + "\"...");
         request(options, (error, response, body) => {
-            if (!body) {
-                console.log("[LOGIN] Uknown error fetching ticket for \"" + this.#currentAvatarName + "\"");
+            if (error) {
+                console.log("[LOGIN] Network error while fetching ticket for " + this.#currentAvatarName + ": " + error);
                 return callback(false);
             }
 
             body = JSON.parse(body);
 
-            if (body.error) {
-                console.log("[LOGIN] Error fetching ticket for \"" + this.#currentAvatarName + "\": " + body.error.text);
-                console.log(JSON.stringify(body));
-                callback(false);
+            if (body.error && body.error.nextValidRequestDate) {
+                const cooldownDuration =  new Date(data.error.nextValidRequestDate) - Date.now();
+                console.log(`[LOGIN] Request limit reached, waiting ${cooldownDuration / 1000} seconds before retrying...`);
+                setTimeout(this.#fetchTicket(callback), cooldownDuration);
+            } else if (body.message === "authentication-needed") {
+                console.log(`[LOGIN] Error in authentication while fetching ticket for ${this.email}: ${body.message}`);
+                console.log("[LOGIN] Re-logging and retrying...");
+                this.cookies = [];
+                this.#saveAccount();
+                this.#login("", (success) => {
+                    if (success) {
+                        this.#fetchTicket(callback);
+                    } else {
+                        callback(false);
+                    }
+                });
             } else {
-                console.log("[LOGIN] All done for " + this.#currentAvatarName);
+                console.log("[LOGIN] Ticket fetched for " + this.#currentAvatarName);
                 callback(body.ticket);
             }
         });
@@ -145,7 +160,28 @@ class LoginHelper {
 
         console.log(`[LOGIN] Switching avatar from ${this.#currentAvatarName} to ${username} for ${this.email}...`);
         request(options, (error, response, body) => {
+            if (error) {
+                console.log("[LOGIN] Network error while switching avatar for " + this.#currentAvatarName + ": " + error);
+                return callback(false);
+            }
+
             let avatars = JSON.parse(body);
+            console.log(avatars);
+
+            if (typeof(avatars[0]) !== "object" || avatars.message === "authentication-needed") {
+                console.log(`[LOGIN] Error in authentication while switching avatar for ${this.email}: ${avatars.message}`);
+                console.log("[LOGIN] Re-logging and retrying...");
+                this.cookies = [];
+                this.#saveAccount();
+                this.#login("", (success) => {
+                    if (success) {
+                        this.#selectAvatar(username, callback);
+                    } else {
+                        callback(false);
+                    }
+                });
+            }
+
             let avatar = avatars.find(avatar => avatar.name === username);
             if (avatar) {
                 options = {
