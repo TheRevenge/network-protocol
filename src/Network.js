@@ -85,6 +85,11 @@ class Network {
     };
   }
 
+  async disconnect() {
+    this.ws.close();
+    this.tlsClient.close();
+  }
+
   onTlsDataReceived(buffer) {
     if (buffer.length == 0)
       return;

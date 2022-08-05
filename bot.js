@@ -38,7 +38,7 @@ switch (args[1]) {
         readline.question("🔐 Enter your SSO ticket: ", (sso) => {
             process.stdout.write("⏳ Starting the bot... ");
     
-            let bot = new Client(args[0], sso.replace("hhfr.", ""));
+            let bot = new Client(args[0], sso.replace("hhfr.", ""), "SSOBot");
             bot.connect();
             botList.push(bot);
     
@@ -60,11 +60,11 @@ switch (args[1]) {
                             console.log(`⚠️ Failed to get ticket for ${account.avatars[index]} \n That bot won't be launched.`);
                         } else {
                             console.log(`⏳ Starting the bot "${account.avatars[index]}" with ticket ${ticket}...`);
-                            let bot = new Client(args[0], ticket.replace("hhfr.", ""));
+                            let bot = new Client(args[0], ticket.replace("hhfr.", ""), account.avatars[index]);
                             bot.connect();
                             botList.push(bot);
                             console.log(`✅ Bot ${account.avatars[index]} started`);
-                            setTimeout(next, 5000);
+                            setTimeout(next, 7000);
                         }
                     });
                 });
@@ -93,7 +93,7 @@ switch (args[1]) {
     
             process.stdout.write("⏳ Starting the bot... ");
     
-            bot = new Client(args[0], ticket.replace("hhfr.", ""));
+            bot = new Client(args[0], ticket.replace("hhfr.", ""), username);
             bot.connect();
     
             console.log("✅");

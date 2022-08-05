@@ -2,9 +2,10 @@ const GameEndpoints = require('./GameEndpoints');
 const Network = require('./Network');
 
 class Client extends EventTarget {
-  constructor(country, ssoTicket) {
+  constructor(country, ssoTicket, username) {
     super();
     this.network = new Network(this, GameEndpoints.getEndpointByCountry(country), ssoTicket);
+    this.username = username;
   }
 
   async connect() {
@@ -33,6 +34,10 @@ class Client extends EventTarget {
 
   sendShout(message, styleId) {
     this.network.packetHandler.sendShout(message, styleId);
+  }
+
+  moveAvatarTo(x, y) {
+    this.network.packetHandler.moveTo(x, y);
   }
 }
 

@@ -10,11 +10,10 @@ const InitDhHandshakeComposer = require('./Messages/Outgoing/Handshake/InitDhHan
 const GetGuestRoomComposer = require('./Messages/Outgoing/Room/GetGuestRoomComposer');
 const FlatOpcComposer = require('./Messages/Outgoing/Room/FlatOpcComposer');
 const FollowFriendComposer = require("./Messages/Outgoing/FriendList/FollowFriendComposer");
+const MoveComposer = require("./Messages/Outgoing/Room/MoveComposer");
 const QuitComposer = require('./Messages/Outgoing/Room/QuitComposer');
 const SendMessageComposer = require("./Messages/Outgoing/FriendList/SendMessageComposer");
 const ShoutComposer = require('./Messages/Outgoing/Room/ShoutComposer');
-const UserStartTypingComposer = require('./Messages/Outgoing/Room/UserStartTypingComposer');
-const UserCancelTypingComposer = require('./Messages/Outgoing/Room/UserCancelTypingComposer');
 
 const DhInitHandshakeEvent = require('./Messages/Incoming/Handshake/DhInitHandshakeEvent');
 const DhCompleteHandshakeEvent = require('./Messages/Incoming/Handshake/DhCompleteHandshakeEvent');
@@ -88,7 +87,8 @@ class PacketHandler {
 
   handlePacket(packet) {
     if (this.handlers[packet.header]) {
-      console.log('[INCOMING][' + packet.name + ']', packet.getMessageBody());
+      const senderName = this.network.client.username;
+      console.log(senderName + " |", '[INCOMING][' + packet.name + ']', packet.getMessageBody());
 
       let handler = new this.handlers[packet.header]();
       handler.client = this.network.client;
@@ -99,7 +99,8 @@ class PacketHandler {
 
       handler.handle();
     } else {
-      console.log('[UNHANDLED INCOMING][' + packet.name + ']', packet.getMessageBody());
+      const senderName = this.network.client.username;
+      console.log(senderName + " |", '[UNHANDLED INCOMING][' + packet.name + ']', packet.getMessageBody());
     }
   }
 
@@ -131,6 +132,10 @@ class PacketHandler {
       this.sendMessage(new ShoutComposer(message, styleId));
   }
 
+  moveTo(x, y) {
+    this.sendMessage(new MoveComposer(x, y));
+  }
+
   instantiate() {
     this.registerPackets();
 
@@ -144,9 +149,10 @@ class PacketHandler {
     message.compose();
 
     let buffer = message.response.get();
-    let packetName = Outgoing.indexed[message.response.header];
+    const packetName = Outgoing.indexed[message.response.header];
+    const senderName = this.network.client.username;
 
-    console.log('[OUTGOING]', `[${packetName}]`,message.response.getMessageBody());
+    console.log(senderName + " |", '[OUTGOING]', `[${packetName}]`,message.response.getMessageBody());
 
     if (this.network.session.crypto.outgoingChaCha) {
       let headerBytes = reverse(buffer.slice(4, 6));
@@ -164,9 +170,10 @@ class PacketHandler {
       message.compose();
 
       let messageBuffer = message.response.get();
-      let packetName = Outgoing.indexed[message.response.header];
-    
-      console.log('[OUTGOING]', `[${packetName}]`,message.response.getMessageBody());
+      const packetName = Outgoing.indexed[message.response.header];
+      const senderName = this.network.client.username;
+
+      console.log(senderName + "|", '[OUTGOING]', `[${packetName}]`,message.response.getMessageBody());
 
       if (this.network.session.crypto.outgoingChaCha) {
         let headerBytes = reverse(messageBuffer.slice(4, 6));

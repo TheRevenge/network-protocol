@@ -33,8 +33,13 @@ class MessengerNewConsoleMessageEvent extends MessageHandler {
                     this.client.leaveRoom();
                 break;
 
+                case "walkto":
+                    this.client.moveAvatarTo(args[0], args[1]);
+                break;
+
                 case "dc":
-                    process.exit(0);
+                    this.client.network.disconnect();
+                break;
                 default:
                     setTimeout(() => {this.client.sendPrivateMessage(this.senderId, "Unknown command!");}, 1000);
              }
