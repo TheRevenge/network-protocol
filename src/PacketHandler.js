@@ -1,4 +1,6 @@
 const reverse = require('buffer-reverse');
+const fs = require('fs');
+const path = require("path");
 
 const ServerMessage = require('./Messages/ServerMessage');
 const Incoming = require('./Messages/Incoming/Incoming').getInstance();
@@ -15,6 +17,7 @@ const QuitComposer = require('./Messages/Outgoing/Room/QuitComposer');
 const SendMessageComposer = require("./Messages/Outgoing/FriendList/SendMessageComposer");
 const ShoutComposer = require('./Messages/Outgoing/Room/ShoutComposer');
 
+const ChatEvent = require('./Messages/Incoming/Room/ChatEvent');
 const DhInitHandshakeEvent = require('./Messages/Incoming/Handshake/DhInitHandshakeEvent');
 const DhCompleteHandshakeEvent = require('./Messages/Incoming/Handshake/DhCompleteHandshakeEvent');
 const MessengerNewConsoleMessageEvent = require("./Messages/Incoming/FriendList/MessengerNewConsoleMessageEvent");
@@ -30,7 +33,12 @@ class PacketHandler {
     this.handlers = [];
   }
 
+  #fileLog(message, username) {
+    fs.appendFile(`${path.join(__dirname, "../logs/") + username}_packetLogs_.log`, Date.now() + ' | ' + message);
+  }
+
   registerPackets() {
+    this.registerPacket(Incoming.Chat, ChatEvent);
     this.registerPacket(Incoming.DhInitHandshake, DhInitHandshakeEvent);
     this.registerPacket(Incoming.DhCompleteHandshake, DhCompleteHandshakeEvent);
     this.registerPacket(Incoming.Ping, PingEvent);
@@ -88,7 +96,7 @@ class PacketHandler {
   handlePacket(packet) {
     if (this.handlers[packet.header]) {
       const senderName = this.network.client.username;
-      console.log(senderName + " |", '[INCOMING][' + packet.name + ']', packet.getMessageBody());
+      this.#fileLog(`[INCOMING][${packet.name}] ${packet.getMessageBody()}]`, senderName);
 
       let handler = new this.handlers[packet.header]();
       handler.client = this.network.client;
@@ -100,7 +108,7 @@ class PacketHandler {
       handler.handle();
     } else {
       const senderName = this.network.client.username;
-      console.log(senderName + " |", '[UNHANDLED INCOMING][' + packet.name + ']', packet.getMessageBody());
+      this.#fileLog(`[UNHANDLED INCOMING][${packet.name}] ${packet.getMessageBody()}]`, senderName);
     }
   }
 
@@ -152,7 +160,7 @@ class PacketHandler {
     const packetName = Outgoing.indexed[message.response.header];
     const senderName = this.network.client.username;
 
-    console.log(senderName + " |", '[OUTGOING]', `[${packetName}]`,message.response.getMessageBody());
+    this.#fileLog(`[OUTGOING][${packetName}] ${packet.getMessageBody()}]`, senderName);
 
     if (this.network.session.crypto.outgoingChaCha) {
       let headerBytes = reverse(buffer.slice(4, 6));
@@ -173,7 +181,7 @@ class PacketHandler {
       const packetName = Outgoing.indexed[message.response.header];
       const senderName = this.network.client.username;
 
-      console.log(senderName + "|", '[OUTGOING]', `[${packetName}]`,message.response.getMessageBody());
+      this.#fileLog(`[OUTGOING][${packetName}] ${packet.getMessageBody()}]`, senderName);
 
       if (this.network.session.crypto.outgoingChaCha) {
         let headerBytes = reverse(messageBuffer.slice(4, 6));

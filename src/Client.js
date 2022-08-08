@@ -6,6 +6,7 @@ class Client extends EventTarget {
     super();
     this.network = new Network(this, GameEndpoints.getEndpointByCountry(country), ssoTicket);
     this.username = username;
+    this.isLoggingChat = false;
   }
 
   async connect() {
