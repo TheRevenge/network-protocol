@@ -176,8 +176,10 @@ class LoginHelper {
                 this.#login("", (success) => {
                     if (success) {
                         this.#selectAvatar(username, callback);
+                        return;
                     } else {
                         callback(false);
+                        return;
                     }
                 });
             }
