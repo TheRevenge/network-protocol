@@ -35,12 +35,12 @@ console.log("✅");
 let botList = [];
 switch (args[1]) {
     case "bot.sso":
-        readline.question("🔐 Enter your SSO ticket: ", (sso) => {
+        readline.question("🔐 Enter your SSO ticket: ", async (sso) => {
             process.stdout.write("⏳ Starting the bot... ");
     
             let bot = new Client(args[0], sso.replace("hhfr.", ""), "SSOBot");
             bot.connect();
-            botList.push(bot);
+            await botList.push(bot);
     
             console.log("✅");
         });
@@ -61,7 +61,7 @@ switch (args[1]) {
                         } else {
                             console.log(`⏳ Starting the bot "${account.avatars[index]}" with ticket ${ticket}...`);
                             let bot = new Client(args[0], ticket.replace("hhfr.", ""), account.avatars[index]);
-                            bot.connect();
+                            await bot.connect();
                             botList.push(bot);
                             console.log(`✅ Bot ${account.avatars[index]} started`);
                             setTimeout(next, 7000);
@@ -85,17 +85,17 @@ switch (args[1]) {
         const username = args[args.indexOf("bot.username") + 1];
 
         const login = new LoginHelper(args[0], email, password);
-        login.getSimpleTicket(username, (ticket) => {
+        login.getSimpleTicket(username, async (ticket) => {
             if (!ticket) {
                 console.log("⚠️ Failed to get ticket");
                 process.exit(1);
             }
     
-            process.stdout.write("⏳ Starting the bot... ");
+            console.log("⏳ Starting the bot... ");
     
             bot = new Client(args[0], ticket.replace("hhfr.", ""), username);
-            bot.connect();
+            await bot.connect();
     
-            console.log("✅");
+            console.log(`✅ Bot ${username} started`);
         });
 }
