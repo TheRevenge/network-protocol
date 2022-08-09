@@ -70,6 +70,7 @@ class LoginHelper {
                         captchaToken = captchaUrl.split("?token=")[1];
                         console.log("[LOGIN] Retrying with captcha token...");
                         this.#login(captchaToken, callback);
+                        readline.close();
                     });
                     break;
             
@@ -176,12 +177,11 @@ class LoginHelper {
                 this.#login("", (success) => {
                     if (success) {
                         this.#selectAvatar(username, callback);
-                        return;
                     } else {
                         callback(false);
-                        return;
                     }
                 });
+                return;
             }
 
             let avatar = avatars.find(avatar => avatar.name === username);
