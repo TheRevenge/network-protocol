@@ -23,7 +23,7 @@ const dom = new JSDOM(`<!DOCTYPE html><p>Bot test</p>`);
 window = dom.window;
 
 const Client = require("./src/Client.js");
-const LoginHelper = require("./src/Login/LoginHelper.js");
+const LoginHelper = require("./src/Account/LoginHelper.js");
 const readline = require('readline').createInterface({
     input: process.stdin,
     output: process.stdout
@@ -39,10 +39,11 @@ switch (args[1]) {
             process.stdout.write("⏳ Starting the bot... ");
     
             let bot = new Client(args[0], sso.replace("hhfr.", ""), "SSOBot");
-            bot.connect();
-            await botList.push(bot);
+            await bot.connect();
+            botList.push(bot);
     
             console.log("✅");
+            readline.close();
         });
         break;
     case "bot.launchList":
@@ -68,6 +69,7 @@ switch (args[1]) {
                         }
                     });
                 });
+                readline.close();
             });
         } catch (error) {
             console.log("⚠️ Error while loading launch list: " + error);

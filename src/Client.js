@@ -6,11 +6,15 @@ class Client extends EventTarget {
     super();
     this.network = new Network(this, GameEndpoints.getEndpointByCountry(country), ssoTicket);
     this.username = username;
-    this.isLoggingChat = false;
+    this.isLoggingChat = true;
+    this.hasFullyLoaded = false;
   }
 
   async connect() {
     await this.network.connect();
+    while (!this.hasFullyLoaded) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
   }
 
   loadRoom(roomId, password) {

@@ -24,6 +24,7 @@ class OkEvent extends MessageHandler {
     this.packetHandler.sendMessages([new GetUserAchievementsComposer(), new GetAccountPreferencesComposer(), new GetAvatarListComposer(), new GetEmailStatusComposer()]);
     this.packetHandler.sendMessages([new MessengerInitComposer(), new GetFriendRequestsComposer(), new GetIgnoreListComposer(), new GetUserFlatCategoriesComposer()]);
     this.packetHandler.sendMessages([new MarketplaceCanMakeOfferComposer()]);
+    this.client.hasFullyLoaded = true;
   }
 }
 
