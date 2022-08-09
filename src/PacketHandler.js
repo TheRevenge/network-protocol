@@ -34,7 +34,9 @@ class PacketHandler {
   }
 
   #fileLog(message, username) {
-    fs.appendFile(`${path.join(__dirname, "../logs/") + username}_packetLogs_.log`, Date.now() + ' | ' + message);
+    fs.appendFile(`${path.join(__dirname, "../logs/") + username}_packetLogs_.log`, Date.now() + ' | ' + message + '\n', (err) => {
+      if (err) throw err;
+    });
   }
 
   registerPackets() {
@@ -94,8 +96,8 @@ class PacketHandler {
   }
 
   handlePacket(packet) {
+    const senderName = this.network.client.username;
     if (this.handlers[packet.header]) {
-      const senderName = this.network.client.username;
       this.#fileLog(`[INCOMING][${packet.name}] ${packet.getMessageBody()}]`, senderName);
 
       let handler = new this.handlers[packet.header]();
@@ -107,7 +109,6 @@ class PacketHandler {
 
       handler.handle();
     } else {
-      const senderName = this.network.client.username;
       this.#fileLog(`[UNHANDLED INCOMING][${packet.name}] ${packet.getMessageBody()}]`, senderName);
     }
   }
@@ -160,7 +161,7 @@ class PacketHandler {
     const packetName = Outgoing.indexed[message.response.header];
     const senderName = this.network.client.username;
 
-    this.#fileLog(`[OUTGOING][${packetName}] ${packet.getMessageBody()}]`, senderName);
+    this.#fileLog(`[OUTGOING][${packetName}] ${message.response.getMessageBody()}]`, senderName);
 
     if (this.network.session.crypto.outgoingChaCha) {
       let headerBytes = reverse(buffer.slice(4, 6));
@@ -181,7 +182,7 @@ class PacketHandler {
       const packetName = Outgoing.indexed[message.response.header];
       const senderName = this.network.client.username;
 
-      this.#fileLog(`[OUTGOING][${packetName}] ${packet.getMessageBody()}]`, senderName);
+      this.#fileLog(`[OUTGOING][${packetName}] ${message.response.getMessageBody()}]`, senderName);
 
       if (this.network.session.crypto.outgoingChaCha) {
         let headerBytes = reverse(messageBuffer.slice(4, 6));

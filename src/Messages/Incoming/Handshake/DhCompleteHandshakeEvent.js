@@ -21,7 +21,7 @@ class DhCompleteHandshakeEvent extends MessageHandler {
 
     this.session.crypto.incomingChaCha = new ChaCha20(chachaKey, this.session.crypto.iv);
     this.session.crypto.outgoingChaCha = new ChaCha20(chachaKey, this.session.crypto.iv);
-    console.log('CRYPTO DONE');
+    console.log('✅ Crypto done for ' + this.client.username);
 
     let getIdentityAgreementTypes = new GetIdentityAgreementTypesComposer();
     let versionCheck = new VersionCheckComposer('0.26.0');
